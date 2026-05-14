@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Draupnir — Moderation Bot Guide</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --fg: #1f2328;
+      --muted: #59636e;
+      --border: #d1d9e0;
+      --code-bg: #f6f8fa;
+      --code-fg: #1f2328;
+      --link: #0969da;
+      --heading-border: #d1d9e0;
+      --table-head: #f6f8fa;
+      --table-row-alt: #f6f8fa;
+      --note-bg: #ddf4ff;
+      --note-border: #54aeff;
+      --warn-bg: #fff8c5;
+      --warn-border: #d4a72c;
+      --tip-bg: #dafbe1;
+      --tip-border: #2da44e;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+        Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--fg);
+      background: var(--bg);
+      padding: 32px 16px 80px;
+    }
+
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Typography ── */
+    h1, h2, h3, h4 {
+      font-weight: 600;
+      line-height: 1.25;
+      margin-top: 1.5em;
+      margin-bottom: 0.6em;
+    }
+    h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--heading-border); }
+    h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--heading-border); }
+    h3 { font-size: 1.25em; }
+    h4 { font-size: 1em; }
+
+    p { margin-bottom: 1em; }
+
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+
+    /* ── Lists ── */
+    ul, ol {
+      padding-left: 2em;
+      margin-bottom: 1em;
+    }
+    li { margin-bottom: 0.25em; }
+    li > ul, li > ol { margin-top: 0.25em; margin-bottom: 0; }
+
+    /* ── Code ── */
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.875em;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 0.2em 0.4em;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+      margin-bottom: 1em;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.875em;
+      border-radius: 0;
+    }
+
+    /* ── Blockquote / callout ── */
+    blockquote {
+      border-left: 4px solid var(--border);
+      padding: 0 1em;
+      color: var(--muted);
+      margin-bottom: 1em;
+    }
+
+    .callout {
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 1em;
+      border-left: 4px solid;
+      font-size: 0.9375em;
+    }
+    .callout-note   { background: var(--note-bg);  border-color: var(--note-border);  }
+    .callout-warn   { background: var(--warn-bg);  border-color: var(--warn-border);  }
+    .callout-tip    { background: var(--tip-bg);   border-color: var(--tip-border);   }
+    .callout strong { display: block; margin-bottom: 4px; font-size: 0.875em; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1em;
+      font-size: 0.9375em;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px 13px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--table-head); font-weight: 600; }
+    tr:nth-child(even) td { background: var(--table-row-alt); }
+
+    /* ── HR ── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2em 0;
+    }
+
+    /* ── Header badge ── */
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.1em;
+      margin-top: -0.5em;
+      margin-bottom: 1.5em;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+<h1>🛡️ Draupnir — Moderation Bot Guide</h1>
+<p class="subtitle">Quick reference for moderators of this Matrix space.</p>
+
+<h2>What is Draupnir?</h2>
+
+<p>Draupnir is a Matrix room moderation bot. It monitors protected rooms for policy violations, automates common moderator tasks, and keeps a shared <strong>policy list</strong> that acts as the single source of truth for who is banned across all rooms. When a user is added to a policy list, the bot enforces the ban in every protected room automatically — moderators only need to act once.</p>
+
+<p>The bot operates from a private <strong>management room</strong> where it posts alerts, accepts commands, and shows confirmation prompts. Moderators interact with the bot exclusively through that room.</p>
+
+<h2>Policy Lists</h2>
+
+<p>A policy list is a special Matrix room that stores ban rules (<code>m.policy.rule.user</code> events). Instead of banning a user room-by-room, you add a rule to the policy list and the bot propagates the ban to every protected room.</p>
+
+<ul>
+  <li>Adding a user to the policy list → bot bans them in all protected rooms (<strong>MemberBanSynchronisation</strong>).</li>
+  <li>Removing a user from the policy list → bot unbans them in all protected rooms.</li>
+  <li>The <code>!ban</code> and <code>!auto add</code> commands write to the policy list, not directly to rooms.</li>
+</ul>
+
+<div class="callout callout-note">
+  <strong>Note</strong>
+  You can watch public community policy lists (e.g. the Matrix.org Community Ban List) with <code>!watch &lt;room&gt;</code>.<br>Any user listed there will be banned automatically across all your rooms.
+</div>
+
+<h2>Join Alerts (JoinAlertProtection)</h2>
+
+<p>When a new user joins any protected room, the bot posts an alert in the management room with the user's MXID, display name, and which room they joined. The alert includes two quick-reaction buttons:</p>
+
+<ul>
+  <li><strong>🚫 Ban</strong> — bans the user from all protected rooms and adds a policy list entry for permanent exclusion.</li>
+  <li><strong>✅ Ignore</strong> — dismisses the alert without taking action.</li>
+</ul>
+
+<div class="callout callout-tip">
+  <strong>No alert shown</strong>
+  If the joining user already has a <code>m.ban</code> policy rule in a watched list, <strong style="display: inline">no alert is posted</strong>.<br>MemberBanSynchronisation handles the ban automatically and silently.
+</div>
+
+<h3>Space join deduplication</h3>
+
+<p>When a user joins a Matrix space, they can quickly join several rooms inside that space. The bot is aware of this: only the <strong>space join itself</strong> triggers an alert. Subsequent joins to child rooms within the configured time window (default: 5 minutes) are silently suppressed.</p>
+
+<p>If a user joins a non-space protected room directly — without first joining the parent space — the alert fires normally.</p>
+
+<h3>Auto-actions</h3>
+
+<p>The bot can take action automatically on join, without posting an alert, if the user matches any of the configured rules. Matching users are acted on immediately and the management room receives a notification<br>(e.g. <em>🔨 Auto-banned @spam:server — matched pattern: <code>casino|crypto</code></em>).</p>
+
+<p>Three types of auto-action rules exist:</p>
+
+<ul>
+  <li><strong>Regex patterns</strong> (<code>!auto add</code>) — tested against both MXID and display name. All patterns are case-insensitive. Plain strings match as substrings anywhere (e.g. <code>casino</code> matches <em>BestCasinoDeals</em>).</li>
+  <li><strong>MXID local part length</strong> (<code>!limit local</code>) — flags users whose MXID local part (before the colon) exceeds the limit. Throwaway accounts often have long numeric IDs.</li>
+  <li><strong>Display name length</strong> (<code>!limit display</code>) — flags users whose display name exceeds the limit. Spammers set long display names because they're shown on room joins.</li>
+</ul>
+
+<h2>Ban Propagation</h2>
+
+<p>When a moderator manually bans a user from a room using their Matrix client (<strong>not</strong> through the bot command), <strong>BanPropagationProtection</strong> detects the room-level ban and automatically adds a ban rule to the configured default policy list. From there, <strong>MemberBanSynchronisation</strong> enforces the ban across all other protected rooms.</p>
+
+<p>No moderator input is required — the ban propagates fully automatically.</p>
+
+<div class="callout callout-note">
+  <strong>Note</strong>
+  Propagation only triggers for bans issued by <em>human</em> moderators. Bans issued by the bot itself (e.g. from <code>!ban</code> or auto-actions) are already policy-backed and do not need to be propagated again.
+</div>
+
+<h2>Kick Propagation</h2>
+
+<p>The <code>!kick</code> command kicks the user from <strong>every</strong> protected room they are currently joined in — not just the room where the command is issued. Kicks are not permanent; the user can rejoin unless a ban is also in place.</p>
+
+<h2>Redactions</h2>
+
+<p>When a user is banned with the reason <strong><code>---</code></strong>, <strong>RedactionSynchronisationProtection</strong> automatically redacts that user's recent messages across all protected rooms. No separate command is needed.</p>
+
+<p>This applies to both manual client bans and the <code>!ban</code> command (which uses <code>---</code> as its default reason).<br>Use the <code>!red</code> command to redact without banning.</p>
+
+<h2>Commands</h2>
+
+<h3>Moderation — Quick Actions</h3>
+
+<table>
+  <thead>
+    <tr><th>Command</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!ban &lt;user&gt;</code></td>
+      <td>Adds a ban rule to the default policy list with reason <code>---</code> (which also triggers automatic redactions).<br>Accepts a bare localpart (<code>alice</code>) which is expanded to <code>@alice:matrix.org</code>, or a full MXID.</td>
+    </tr>
+    <tr>
+      <td><code>!uban &lt;user&gt;</code></td>
+      <td>Removes all policy rules for a user and unbans them from all protected rooms.<br>No confirmation prompt. Same localpart expansion as <code>!ban</code>.</td>
+    </tr>
+    <tr>
+      <td><code>!kick &lt;user&gt;</code></td>
+      <td>Kicks a user from every protected room they are currently joined in. Same localpart expansion.<br>Does not add a policy rule — the user can rejoin.</td>
+    </tr>
+    <tr>
+      <td><code>!red &lt;user&gt;</code></td>
+      <td>Redacts all recent messages from a user across all protected rooms without banning them.<br>Same localpart expansion.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Auto-Action Patterns</h3>
+
+<table>
+  <thead>
+    <tr><th>Command</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!auto</code></td>
+      <td>Lists all currently configured auto-action regex patterns</td>
+    </tr>
+    <tr>
+      <td><code>!auto add &lt;pattern&gt;</code></td>
+      <td>Adds a regex pattern. Tested case-insensitively against MXID and display name on every join.<br>Example: <code>!auto add "casino|crypto"</code></td>
+    </tr>
+    <tr>
+      <td><code>!auto del &lt;pattern&gt;</code></td>
+      <td>Removes an existing pattern. The string must match exactly</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>Regex tips</h4>
+<ul>
+  <li>Plain strings are substring matches: <code>spam</code> matches anything containing "spam".</li>
+  <li>Use <code>|</code> for alternatives: <code>casino|viagra|forex</code>.</li>
+  <li>Match MXID-only patterns with <code>^@</code>: <code>^@\d{8,}:</code> matches 8+ digit local parts.</li>
+  <li>Example for common variations: <code>b[o0]+[o0]+bs</code> matches <em>boobs</em>, <em>b00bs</em>, <em>booooobs</em>, etc.</li>
+</ul>
+
+<h3>Whitelist</h3>
+
+<p>Whitelisted users bypass all join alerts and auto-action rules entirely. When a whitelisted user joins a protected room, a brief notification is posted in the management room — no Ban/Ignore buttons, no auto-action.</p>
+
+<table>
+  <thead>
+    <tr><th>Command</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!white</code></td>
+      <td>List all currently whitelisted users</td>
+    </tr>
+    <tr>
+      <td><code>!white add &lt;user&gt;</code></td>
+      <td>Add a user to the whitelist.<br>Bare localparts expand to <code>@localpart:matrix.org</code><br>Example: <code>!white add alice</code> → <code>@alice:matrix.org</code></td>
+    </tr>
+    <tr>
+      <td><code>!white del &lt;user&gt;</code></td>
+      <td>Remove a user from the whitelist.<br>Bare localpart expansion applies — <code>!white del alice</code> removes <code>@alice:matrix.org</code> only, not <code>@alice:other.server</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout callout-note">
+  <strong>Note</strong>
+  Whitelisting does not affect policy list rules. If a whitelisted user has a ban policy rule, MemberBanSynchronisation will still enforce the ban. The whitelist only suppresses the management room alert and auto-actions — policy enforcement is handled separately.
+</div>
+
+<h3>Length Limits</h3>
+
+<table>
+  <thead>
+    <tr><th>Command</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!limit local &lt;n&gt;</code></td>
+      <td>Auto-acts on users whose MXID local part exceeds <code>n</code> characters. Set to <code>0</code> to disable. Example: <code>!limit local 20</code></td>
+    </tr>
+    <tr>
+      <td><code>!limit display &lt;n&gt;</code></td>
+      <td>Auto-acts on users whose display name exceeds <code>n</code> characters. Set to <code>0</code> to disable. Example: <code>!limit display 30</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Rooms</h3>
+
+<table>
+  <thead>
+    <tr><th>Command</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!rooms</code></td>
+      <td>Lists all rooms currently under bot protection</td>
+    </tr>
+    <tr>
+      <td><code>!rooms clear-bans &lt;room&gt;</code></td>
+      <td>Shows a preview of all room-level bans in the specified room with a count, then asks for ✅ OK / ❌ Cancel confirmation before removing them.<br>Does not affect policy list rules.</td>
+    </tr>
+    <tr>
+      <td><code>!rooms clear-bans everything</code></td>
+      <td>Same as above but processes all protected rooms at once.<br>Rooms where the bot lacks permission are listed as skipped.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Rules &amp; Protections</h3>
+
+<table>
+  <thead>
+    <tr><th>Command</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!rules</code></td>
+      <td>Lists all active policy rules across all watched policy lists</td>
+    </tr>
+    <tr>
+      <td><code>!protections</code></td>
+      <td>Lists all available protections and whether each is enabled or disabled</td>
+    </tr>
+    <tr>
+      <td><code>!protections show &lt;name&gt;</code></td>
+      <td>Shows current configuration and capability settings for a specific protection.<br>Example: <code>!protections show JoinAlertProtection</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Protection Configuration</h2>
+
+<h3>Ban vs. Kick mode</h3>
+
+<p>By default, both manual reaction buttons and auto-actions issue <strong>bans</strong>. To switch to kicks (lighter-touch, user can rejoin):</p>
+
+<pre><code>!protections config set JoinAlertProtection kickInsteadOfBan true</code></pre>
+
+<p>To switch back to bans:</p>
+
+<pre><code>!protections config set JoinAlertProtection kickInsteadOfBan false</code></pre>
+
+<div class="callout callout-warn">
+  <strong>Warning</strong>
+  In kick mode, <strong style="display: inline">no policy rule is written</strong> and the action does not propagate to other rooms.<br>Use ban mode for persistent, space-wide exclusion.
+</div>
+
+<h3>Space deduplication window</h3>
+
+<p>Controls how long (in seconds) after a user joins a space during which joins to child rooms are suppressed. Default is 300 seconds (5 minutes).</p>
+
+<pre><code>!protections config set JoinAlertProtection spaceDedupWindowSeconds 300</code></pre>
+
+<p>Increase this if users are seeing duplicate alerts for the same person joining many rooms in a large space.</p>
+
+<h2>Full Command Reference</h2>
+
+<p>The short commands above are aliases. The full equivalents are listed here for reference — they are not typically needed but may be useful for advanced configuration or scripting.</p>
+
+<table>
+  <thead>
+    <tr><th>Short command</th><th>Full equivalent</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!ban &lt;user&gt;</code></td>
+      <td><code>!bans &lt;@user:server&gt; &lt;list&gt; &lt;reason&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>!uban &lt;user&gt;</code></td>
+      <td><code>!unban &lt;@user:server&gt; --no-confirm</code></td>
+    </tr>
+    <tr>
+      <td><code>!kick &lt;user&gt;</code></td>
+      <td><code>!kicks &lt;@user:server&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>!red &lt;user&gt;</code></td>
+      <td><code>!redact &lt;@user:server&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>!auto add pattern</code></td>
+      <td><code>!protections config add JoinAlertProtection autoActionPatterns "pattern"</code></td>
+    </tr>
+    <tr>
+      <td><code>!auto del pattern</code></td>
+      <td><code>!protections config remove JoinAlertProtection autoActionPatterns "pattern"</code></td>
+    </tr>
+    <tr>
+      <td><code>!limit local &lt;n&gt;</code></td>
+      <td><code>!protections config set JoinAlertProtection maxMxidLocalpartLength &lt;n&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>!limit display &lt;n&gt;</code></td>
+      <td><code>!protections config set JoinAlertProtection maxDisplayNameLength &lt;n&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>!white add</code> / <code>!white del</code></td>
+      <td><code>!protections config [add|remove] JoinAlertProtection whitelistedUsers &lt;@user:server&gt;</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Other Useful Commands</h2>
+
+<table>
+  <thead>
+    <tr><th>Command</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!info</code></td>
+      <td>A short version of this guide</td>
+    </tr>
+    <tr>
+      <td><code>!watch &lt;room&gt;</code></td>
+      <td>Start watching a policy list room. All users listed there will be banned automatically.</td>
+    </tr>
+    <tr>
+      <td><code>!unwatch &lt;room&gt;</code></td>
+      <td>Stop watching a policy list room</td>
+    </tr>
+    <tr>
+      <td><code>!rooms add &lt;room&gt;</code></td>
+      <td>Add a room to the bot's protected set</td>
+    </tr>
+    <tr>
+      <td><code>!rooms remove &lt;room&gt;</code></td>
+      <td>Remove a room from the bot's protected set</td>
+    </tr>
+    <tr>
+      <td><code>!rules matching &lt;user&gt;</code></td>
+      <td>Show which policy rules match a given user, room, or server</td>
+    </tr>
+    <tr>
+      <td><code>!status</code></td>
+      <td>Show the bot's current status, connected rooms, and policy lists</td>
+    </tr>
+    <tr>
+      <td><code>!help</code></td>
+      <td>List all available commands</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="color: var(--muted); font-size: 0.875em;">
+  Based on <a href="https://github.com/the-draupnir-project/Draupnir">Draupnir</a> v3.0.0 with custom protections and shortcut commands.
+</p>
+
+</div>
+</body>
+</html>
