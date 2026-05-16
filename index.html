@@ -187,12 +187,6 @@
   If the joining user already has a <code>m.ban</code> policy rule in a watched list, <strong style="display: inline">no alert is posted</strong>.<br>MemberBanSynchronisation handles the ban automatically and silently.
 </div>
 
-<h3>Space join deduplication</h3>
-
-<p>When a user joins a Matrix space, they can quickly join several rooms inside that space. The bot is aware of this: only the <strong>space join itself</strong> triggers an alert. Subsequent joins to child rooms within the configured time window (default: 5 minutes) are silently suppressed.</p>
-
-<p>If a user joins a non-space protected room directly — without first joining the parent space — the alert fires normally.</p>
-
 <h3>Auto-actions</h3>
 
 <p>The bot can take action automatically on join, without posting an alert, if the user matches any of the configured rules. Matching users are acted on immediately and the management room receives a notification<br>(e.g. <em>🔨 Auto-banned @spam:server — matched pattern: <code>casino|crypto</code></em>).</p>
@@ -391,14 +385,6 @@
   <strong>Warning</strong>
   In kick mode, <strong style="display: inline">no policy rule is written</strong> and the action does not propagate to other rooms.<br>Use ban mode for persistent, space-wide exclusion.
 </div>
-
-<h3>Space deduplication window</h3>
-
-<p>Controls how long (in seconds) after a user joins a space during which joins to child rooms are suppressed. Default is 300 seconds (5 minutes).</p>
-
-<pre><code>!protections config set JoinAlertProtection spaceDedupWindowSeconds 300</code></pre>
-
-<p>Increase this if users are seeing duplicate alerts for the same person joining many rooms in a large space.</p>
 
 <h2>Full Command Reference</h2>
 
