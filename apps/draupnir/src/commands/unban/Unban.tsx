@@ -214,15 +214,6 @@ DraupnirContextToCommandContextTranslator.registerTranslation(
   }
 );
 
-function policyRemovalText() {
-  return (
-    <fragment>
-      If you wish to remove only a specific policy, please use the{" "}
-      <code>policy remove</code> command.
-    </fragment>
-  );
-}
-
 function renderPoliciesToRemove(policyMatches: ListMatches[]): DocumentNode {
   return (
     <fragment>
@@ -314,8 +305,6 @@ export function renderUnbanMembersPreview(
       {renderPoliciesToRemove(preview.policyMatchesToRemove)}
       {preview.membersToUnban.length} users will be unbanned:
       {preview.membersToUnban.map(renderMemberRoomsPreview)}
-      <br />
-      {policyRemovalText()}
     </fragment>
   );
 }
@@ -340,7 +329,6 @@ function renderUnbanEntityResult(result: UnbanEntityResult): DocumentNode {
         <summary>The following policies were found banning this entity</summary>
         {renderPolicyRemovalResult(result)}
       </details>
-      {policyRemovalText()}
     </fragment>
   );
 }
