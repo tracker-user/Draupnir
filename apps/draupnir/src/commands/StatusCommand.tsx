@@ -154,12 +154,12 @@ export function renderPolicyList(list: WatchedPolicyRoom): DocumentNode {
         {list.revision.room.toRoomIDOrAlias()}
       </a>{" "}
       &#32; ({list.revision.shortcode ?? "<no shortcode>"}) propagation:{" "}
-      {list.propagation} &#32; (rules:{" "}
+      {list.propagation} — rules:{" "}
       {list.revision.allRulesOfType(PolicyRuleType.Server).length} servers,{" "}
       {list.revision.allRulesOfType(PolicyRuleType.User).length} users,{" "}
-      {list.revision.allRulesOfType(PolicyRuleType.Room).length} rooms) (last
+      {list.revision.allRulesOfType(PolicyRuleType.Room).length} rooms — last
       update:{" "}
-      <code>{new Date(list.revision.revisionID.time).toLocaleString()}</code>)
+      <code>{new Date(list.revision.revisionID.time).toLocaleString()}</code>
     </li>
   );
 }
@@ -207,8 +207,6 @@ export function renderStatusInfo(info: StatusInfo): DocumentNode {
     const renderedLists = lists.map(renderPolicyList);
     return (
       <fragment>
-        <b>{header}</b>
-        <br />
         <ul>
           {renderedLists.length === 0 ? (
             <li>
@@ -224,28 +222,17 @@ export function renderStatusInfo(info: StatusInfo): DocumentNode {
   return (
     <root>
       <b>Protected Rooms: </b>
-      {info.numberOfProtectedRooms}
-      <br />
-      <b>Protected Users: </b>
+      {info.numberOfProtectedRooms} — <b>Protected Users: </b>
       {info.numberOfUniqueMembers}
       <br />
-      {renderPolicyLists("Subscribed policy rooms", info.subscribedLists)}
       {renderPolicyLists(
         "Subscribed and protected policy rooms",
         info.subscribedAndProtectedLists
       )}
       {renderNotificationRooms(info)}
       <b>Version: </b>
-      <code>{info.version}</code>
-      <br />
-      <b>Branch: </b>
+      <code>{info.version}</code> — <b>Branch: </b>
       <code>{info.branch}</code>
-      <br />
-      <b>Repository: </b>
-      <code>{info.repository}</code>
-      <br />
-      <b>Documentation: </b>{" "}
-      <a href={info.documentationURL}>{info.documentationURL}</a>
       <br />
     </root>
   );
