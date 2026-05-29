@@ -43,6 +43,13 @@ import {
   renderRoomSetResult,
 } from "@the-draupnir-project/mps-interface-adaptor";
 
+export function shortProtect(name: string): string {
+  return name
+    .replace("Protection", "")
+    .replace("Member", "")
+    .replace("Synchronisation", "Sync");
+}
+
 // yeah i know this is a bit insane but whatever, it can be our secret.
 function renderResultForUserInSetMap(
   usersInSetMap: ResultForUsersInSet,
@@ -59,8 +66,8 @@ function renderResultForUserInSetMap(
   return (
     <details>
       <summary>
-        <code>{description.name}</code>: {ingword} {usersInSetMap.map.size}{" "}
-        &#32;
+        <code>{shortProtect(description.name)}</code>: {ingword}{" "}
+        {usersInSetMap.map.size} &#32;
         {usersInSetMap.map.size === 1 ? "user" : "users"} from protected rooms -
         &#32;
         {renderOutcome(usersInSetMap.isEveryResultOk)}.
@@ -85,7 +92,7 @@ function renderRoomSetResultForUser(
           ""
         ) : (
           <fragment>
-            <code>{description.name}</code>:
+            <code>{shortProtect(description.name)}</code>:
           </fragment>
         )}
         {userID} will be {nnedword} from {roomResults.map.size} rooms - &#32;
@@ -218,7 +225,7 @@ class StandardUserConsequencesRenderer implements UserConsequences {
           <fragment>
             {
               <fragment>
-                <code>{this.description.name}</code>:
+                <code>{shortProtect(this.description.name)}</code>:
               </fragment>
             }
             {resultMap.map.size} will be banned from{" "}

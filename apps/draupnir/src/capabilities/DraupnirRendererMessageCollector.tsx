@@ -18,6 +18,7 @@ import {
   DocumentNode,
 } from "@the-draupnir-project/interface-manager";
 import { sendMatrixEventsFromDeadDocument } from "@the-draupnir-project/mps-interface-adaptor";
+import { shortProtect } from "./StandardUserConsequencesRenderer";
 
 export class DraupnirRendererMessageCollector implements RendererMessageCollector {
   constructor(
@@ -58,7 +59,7 @@ export class DraupnirRendererMessageCollector implements RendererMessageCollecto
     this.sendMessage(
       capability,
       <fragment>
-        <code>{protection.name}</code>: {message}
+        <code>{shortProtect(protection.name)}</code>: {message}
       </fragment>
     );
   }
