@@ -12,9 +12,12 @@ import {
   DocumentNode,
 } from "@the-draupnir-project/interface-manager";
 
+import { Type } from "@sinclair/typebox";
+
 import {
   AbstractProtection,
   ActionResult,
+  EDStatic,
   Logger,
   MembershipChange,
   MembershipChangeType,
@@ -29,7 +32,6 @@ import {
   isError,
   UserConsequences,
   Membership,
-  UnknownConfig,
   allocateProtection,
   OwnLifetime,
   Protection,
@@ -196,6 +198,22 @@ async function promptUnbanPropagation(
   }
 }
 
+const BanPropagationProtectionSettings = Type.Object(
+  {
+    defaultList: Type.String({
+      default: "",
+      description:
+        "Room ID or alias of the policy list to automatically write bans into, " +
+        "skipping the selection prompt. Leave empty to keep the existing prompt behaviour.",
+    }),
+  },
+  { title: "BanPropagationProtectionSettings" }
+);
+
+type BanPropagationProtectionSettings = EDStatic<
+  typeof BanPropagationProtectionSettings
+>;
+
 export type BanPropagationProtectionCapabilities = {
   userConsequences: UserConsequences;
 };
@@ -203,7 +221,7 @@ export type BanPropagationProtectionCapabilities = {
 export type BanPropagationProtectionCapabilitiesDescription =
   ProtectionDescription<
     Draupnir,
-    UnknownConfig,
+    typeof BanPropagationProtectionSettings,
     BanPropagationProtectionCapabilities
   >;
 
@@ -225,7 +243,8 @@ export class BanPropagationProtection
     >,
     capabilities: BanPropagationProtectionCapabilities,
     protectedRoomsSet: ProtectedRoomsSet,
-    private readonly draupnir: Draupnir
+    private readonly draupnir: Draupnir,
+    private readonly settings: BanPropagationProtectionSettings
   ) {
     super(description, lifetime, capabilities, protectedRoomsSet, {});
     this.draupnir.reactionHandler.on(
@@ -276,7 +295,49 @@ export class BanPropagationProtection
     if (rulesMatchingUser.length > 0) {
       return; // user is already banned.
     }
+    if (this.settings.defaultList !== "") {
+      void Task(this.autoPropagateToDefaultList(change));
+      return;
+    }
     void Task(promptBanPropagation(this.draupnir, change));
+  }
+
+  private async autoPropagateToDefaultList(
+    change: MembershipChange
+  ): Promise<void> {
+    const ref = MatrixRoomReference.fromString(this.settings.defaultList);
+    if (isError(ref)) {
+      log.error(
+        `Invalid defaultList value "${this.settings.defaultList}"`,
+        ref.error
+      );
+      return;
+    }
+    const roomID = await resolveRoomReferenceSafe(this.draupnir.client, ref.ok);
+    if (isError(roomID)) {
+      log.error(`Could not resolve defaultList room`, roomID.error);
+      return;
+    }
+    const editorResult =
+      await this.draupnir.policyRoomManager.getPolicyRoomEditor(roomID.ok);
+    if (isError(editorResult)) {
+      log.error(
+        `Could not get policy room editor for defaultList`,
+        editorResult.error
+      );
+      return;
+    }
+    const banResult = await editorResult.ok.banEntity(
+      PolicyRuleType.User,
+      change.userID,
+      change.content.reason ?? ""
+    );
+    if (isError(banResult)) {
+      log.error(
+        `Failed to auto-add ban for ${change.userID} to defaultList`,
+        banResult.error
+      );
+    }
   }
 
   private async handleUnban(change: MembershipChange): Promise<void> {
@@ -335,7 +396,11 @@ export class BanPropagationProtection
   }
 }
 
-describeProtection<BanPropagationProtectionCapabilities, Draupnir>({
+describeProtection<
+  BanPropagationProtectionCapabilities,
+  Draupnir,
+  typeof BanPropagationProtectionSettings
+>({
   name: "BanPropagationProtection",
   description:
     "When you ban a user in any protected room with a client, this protection\
@@ -347,13 +412,14 @@ describeProtection<BanPropagationProtectionCapabilities, Draupnir>({
   defaultCapabilities: {
     userConsequences: "StandardUserConsequences",
   },
+  configSchema: BanPropagationProtectionSettings,
   factory: async (
     decription,
     lifetime,
     protectedRoomsSet,
     draupnir,
     capabilities,
-    _settings
+    settings
   ) =>
     allocateProtection(
       lifetime,
@@ -362,7 +428,8 @@ describeProtection<BanPropagationProtectionCapabilities, Draupnir>({
         lifetime,
         capabilities,
         protectedRoomsSet,
-        draupnir
+        draupnir,
+        settings
       )
     ),
 });
