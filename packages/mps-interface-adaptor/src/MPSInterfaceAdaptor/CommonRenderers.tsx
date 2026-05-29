@@ -97,7 +97,7 @@ export function renderFailedSingularConsequence(
 }
 
 export function renderOutcome(isOutcomeOk: boolean): DocumentNode {
-  const colour = isOutcomeOk ? "#7cfc00" : "#E01F2B";
+  const colour = isOutcomeOk ? "#61C688" : "#C2185B";
   return (
     <fragment>
       <span data-mx-color={colour}>{isOutcomeOk ? "OK" : "Failed"}</span>

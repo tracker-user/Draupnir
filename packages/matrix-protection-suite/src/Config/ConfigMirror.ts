@@ -112,7 +112,7 @@ export class StandardConfigMirror<
     } else {
       return {
         ...config,
-        [key]: [...(config[key] as unknown[]), TBValue.Decode(schema, value)],
+        [key]: [...(config[key] as unknown[]), value],
       };
     }
   }

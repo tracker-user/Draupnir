@@ -149,7 +149,7 @@ const CommonProtectionSettingParameters = tuple(
   }
 );
 
-interface SettingChangeSummary<
+export interface SettingChangeSummary<
   TConfig extends UnknownConfig = UnknownConfig,
   Key extends keyof EDStatic<TConfig> = keyof EDStatic<TConfig>,
 > {
@@ -320,12 +320,12 @@ export const DraupnirProtectionsConfigRemoveCommand = describeCommand({
       details,
       // Yeha I know this sucks but either fix it or fuck off, it'll be fine.
       settingName as never,
-      newSettings.ok as never
+      newSettings as never
     );
   },
 });
 
-function renderSettingChangeSummary(
+export function renderSettingChangeSummary(
   summary: SettingChangeSummary
 ): DocumentNode {
   const renderProperty = (value: unknown) => {
