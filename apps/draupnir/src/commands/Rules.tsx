@@ -48,13 +48,7 @@ function renderListMatches(
   if (lists.length === 0) {
     return Ok(<root>No policy lists configured</root>);
   }
-  return Ok(
-    <root>
-      <b>Rules currently in use:</b>
-      <br />
-      {lists.map((list) => renderListRules(list))}
-    </root>
-  );
+  return Ok(<root>{lists.map((list) => renderListRules(list))}</root>);
 }
 
 export function renderRuleHashes(rule: HashedLiteralPolicyRule): DocumentNode {
