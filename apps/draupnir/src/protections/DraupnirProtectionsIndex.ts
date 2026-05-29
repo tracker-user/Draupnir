@@ -18,6 +18,7 @@ import "./DraupnirNews/DraupnirNews";
 import "./FirstMessageIsImage";
 import "./HomeserverUserPolicyApplication/HomeserverUserPolicyProtection";
 import "./InvalidEventProtection";
+import "./JoinAlertProtection";
 import "./JoinWaveShortCircuit";
 import "./RedactionSynchronisation";
 import "./MembershipChangeProtection";
