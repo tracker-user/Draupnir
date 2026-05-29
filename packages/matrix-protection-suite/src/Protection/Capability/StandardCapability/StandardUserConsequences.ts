@@ -57,7 +57,8 @@ export class StandardUserConsequences implements UserConsequences, Capability {
       const membership = roomMembershipRevision.membershipForUser(match.userID);
       if (
         membership === undefined ||
-        membership.membership === Membership.Ban
+        membership.membership === Membership.Ban ||
+        membership.membership === Membership.Leave
       ) {
         continue;
       }

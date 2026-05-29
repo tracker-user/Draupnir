@@ -233,6 +233,13 @@ export const RoomMessage = Type.Intersect([
       VideoMessageContent,
       AudioMessageContent,
       EmptyContent,
+      Type.Object(
+        {
+          msgtype: Type.String(),
+          body: Type.String(),
+        },
+        { additionalProperties: true }
+      ),
     ]),
     type: Type.Literal("m.room.message"),
   }),
